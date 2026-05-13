@@ -1,6 +1,6 @@
 # Manuscript Digitization Automation
 
-Automates scraping OCR results from intuist.ai (Pandulipi Mitram) and builds a Word document with manuscript images + Devanagari text.
+Automates scraping OCR results from intuist.ai (Pandulipi Mitram) and builds a Word document with manuscript images + Indic script text (Devanagari, Odia, Brahmi, and other scripts).
 
 ---
 
@@ -20,15 +20,16 @@ Open a terminal in this folder and run:
 npm install
 ```
 
-### 4. Configure config.js
-Open `config.js` and update:
+### 4. Configure `src/config.ts`
+Open `src/config.ts` and update:
 
-**CHROME_PATH** — path to your Chrome.exe:
-- Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+**CHROME_PATH** — path to your Chrome executable:
+- Windows: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`
 - Mac: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+- Linux: `/usr/bin/google-chrome`
 
 **CHROME_PROFILE_PATH** — your Chrome user data folder:
-- Windows: `C:\Users\YOUR_USERNAME\AppData\Local\Google\Chrome\User Data`
+- Windows: `C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Google\\Chrome\\User Data`
 - Mac: `/Users/YOUR_USERNAME/Library/Application Support/Google/Chrome`
 
 To find your username on Windows: open Command Prompt and type `echo %USERNAME%`
@@ -41,65 +42,100 @@ To find your username on Windows: open Command Prompt and type `echo %USERNAME%`
 1. Open Chrome and go to https://app.intuist.ai/veda/pandulipi-mitram
 2. Upload your PDF
 3. Click **OCR All**
-4. Wait for ALL pages to finish processing (all should show results in sidebar)
+4. Wait for ALL pages to finish processing (all should show results in the left sidebar)
 5. **Do not close the browser**
 
-### Step 2: Find the right panel selector (first time only)
-```
-node debug_selector.js
-```
-This opens the site and tries to find which CSS selector contains the OCR text.
-Look at the output and copy the best selector into `config.js` as `OCR_RESULT_SELECTOR`.
-
-### Step 3: Run the automation
-```
-node process.js
-```
-OR
+### Step 2: Run the automation
 ```
 npm start
 ```
+or
+```
+npx ts-node src/process.ts
+```
 
 The script will:
-1. Open Chrome (using your existing login session)
-2. Read all pages from the left sidebar
-3. Click each page one by one
-4. Download the page image
-5. Copy the OCR text and clean it (keep only Devanagari)
-6. Build a Word document
+1. Open Chrome (reusing your existing login session)
+2. Prompt you to upload your PDF and run OCR — press Enter when ready
+3. Read all pages from the left sidebar
+4. Click each page one by one
+5. Download the page image
+6. Extract Indic script text and strip transliterations (IAST, Roman, etc.)
+7. Build a Word document
 
-Output will be saved in the `output/` folder.
+Output is saved in the `output/` folder as `manuscript-N.docx`.
+
+---
+
+## Merging Multiple Documents
+
+If you processed a manuscript in multiple batches, you can merge the resulting DOCX files:
+
+```
+npm run merge
+```
+This shows an interactive list of files in `output/` — enter the numbers in the order you want them merged.
+
+To specify files directly:
+```
+npx ts-node src/merge_docs.ts manuscript-1.docx manuscript-2.docx
+```
+Full paths or filenames relative to `output/` both work. The merged file is saved as `output/merged-<timestamp>.docx`.
+
+---
+
+## Output
+
+Files are saved in the `output/` folder:
+```
+output/manuscript-1.docx
+output/merged-1234567890.docx
+```
+
+Each page in the Word document contains:
+1. The manuscript page image (capped at 400pt tall so text starts on the same page)
+2. Cleaned Indic script text below the image (one paragraph per line)
+3. A page break before the next manuscript page
+
+### Supported OCR formats
+
+The text extractor (`src/clean_text.ts`) handles three output formats from Pandulipi Mitram:
+
+| Format | Example input | Kept |
+|--------|---------------|------|
+| A — Devanagari/Sanskrit (`L1:` labels) | `L1: सँगा अथाणम्पि...` | Yes |
+| B — Regional scripts (`Odia:` labels) | `Odia: ନବଗ୍ରହଙ୍କ...` | Yes (label stripped) |
+| C — Ancient scripts (`Line N:` labels) | `Line 1: ᳆ᳫᳯᳮ᳸ ॥` | Yes (label stripped) |
+
+IAST/Roman transliterations and editorial annotations are always stripped.
+
+---
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Run the OCR scraper and build DOCX |
+| `npm run merge` | Interactively merge DOCX files |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run start:compiled` | Run compiled output (faster, no ts-node) |
+| `npm run merge:compiled` | Run compiled merge script |
 
 ---
 
 ## Troubleshooting
 
 **"No pages found in sidebar"**
-- Make sure OCR All has completed before running the script
-- Make sure you're logged in
-
-**"selector not found" or empty text**
-- Run `node debug_selector.js` first to find the correct selector
-- Update `OCR_RESULT_SELECTOR` in config.js
+- Make sure OCR All has completed before pressing Enter
+- Make sure you are logged in to the site
 
 **Images not downloading**
-- The site requires authentication — make sure CHROME_PROFILE_PATH is set correctly
-  so Puppeteer uses your logged-in Chrome session
+- The site requires authentication — make sure `CHROME_PROFILE_PATH` points to your real Chrome profile so Puppeteer reuses your session
 
 **Script crashes mid-way**
-- Just run `node process.js` again — it will start from scratch
-- All results are saved at the end, so partial runs produce no output
+- Run `npm start` again — it starts fresh
+- Check `workspace/session-N/debug-page-N.png` for a screenshot of what went wrong
 
----
-
-## Output
-
-Files are saved in the `output/` folder as:
-```
-output/manuscript-1234567890.docx
-```
-
-Each page in the Word document contains:
-1. The manuscript page image
-2. Page number label
-3. Cleaned Devanagari text below the image
+**Merged document looks wrong**
+- Make sure all input files were produced by this tool (same page structure)
+- Select files in the correct order when prompted
