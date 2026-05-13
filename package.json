@@ -1,0 +1,15 @@
+{
+  "name": "manuscript-automation",
+  "version": "1.0.0",
+  "description": "Automates scraping of OCR results from intuist.ai and builds a DOCX",
+  "main": "process.js",
+  "scripts": {
+    "start": "node process.js",
+    "debug": "node debug_selector.js",
+    "merge": "node merge_docs.js"
+  },
+  "dependencies": {
+    "docx": "^8.5.0",
+    "puppeteer": "^23.0.0"
+  }
+}
