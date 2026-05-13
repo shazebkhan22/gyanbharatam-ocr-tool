@@ -2,14 +2,22 @@
   "name": "manuscript-automation",
   "version": "1.0.0",
   "description": "Automates scraping of OCR results from intuist.ai and builds a DOCX",
-  "main": "process.js",
+  "main": "dist/process.js",
   "scripts": {
-    "start": "node process.js",
-    "debug": "node debug_selector.js",
-    "merge": "node merge_docs.js"
+    "start": "ts-node src/process.ts",
+    "merge": "ts-node src/merge_docs.ts",
+    "build": "tsc",
+    "start:compiled": "node dist/process.js",
+    "merge:compiled": "node dist/merge_docs.js"
   },
   "dependencies": {
     "docx": "^8.5.0",
+    "jszip": "^3.10.1",
     "puppeteer": "^23.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.41",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

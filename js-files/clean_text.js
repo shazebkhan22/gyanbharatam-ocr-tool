@@ -114,7 +114,7 @@ function cleanText(raw) {
 function extractDevanagariFromDOM() {
   const HAS_INDIC  = /[ऀ-ॿ᳐-᳿᳀-᳏଀-୿਀-੿ঀ-৿ఀ-౿ಀ-೿ഀ-ൿ஀-௿઀-૿]/;
   const STOP       = /^(Translation|Script\s*(&|and)\s*Language|Paleographic|Literal|Interpretive)/i;
-  const IAST_LBL   = /^(IAST|Roman|Transliteration|Latin)\s*:/i;
+  const IAST_LBL   = /^(IAST|Roman|Transliteration|Latin|Original)\s*:/i;
   const SKIP_LN    = /^(Note on reading|Transliteration\s*\(Line|Download PDF|Script\s*&\s*Language|Script:\s|Language:)/i;
   const SCRIPT_LBL = /^(Odia|Bengali|Telugu|Kannada|Malayalam|Tamil|Gujarati|Punjabi|Devanagari|Sanskrit|Hindi|Script)\s*:\s*/i;
 
